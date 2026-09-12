@@ -31,7 +31,7 @@
                   <th>费用项目</th>
                   <th>金额</th>
                   <th>分摊方式</th>
-                  <th>待支付</th>
+                  <th>人均待支付</th>
                   <th>状态</th>
                 </tr>
               </thead>
@@ -44,7 +44,10 @@
           <article class="panel">
             <div class="panel-header">
               <h2>清洁值日排班</h2>
-              <button class="primary-btn" id="rotate-schedule">下一轮排班</button>
+              <div class="panel-header-actions">
+                <button class="secondary-btn" id="add-schedule">新增排班</button>
+                <button class="primary-btn" id="rotate-schedule">下一轮排班</button>
+              </div>
             </div>
             <div id="schedule-list" class="stack-list"></div>
           </article>
@@ -68,15 +71,75 @@
       </main>
     </div>
 
-    <template id="bill-row-template">
-      <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td><span class="status-pill"></span></td>
-      </tr>
-    </template>
+    <dialog class="dialog" id="bill-dialog">
+      <form class="dialog-form" id="bill-form">
+        <div class="dialog-header">
+          <div><p class="eyebrow">费用记录</p><h2>新增一笔费用</h2></div>
+          <button class="icon-btn" type="button" data-close-dialog aria-label="关闭">×</button>
+        </div>
+        <div class="form-grid">
+          <label class="field full"><span>费用名称</span><input name="name" required maxlength="20" placeholder="例如：9 月电费" /></label>
+          <label class="field"><span>总金额（元）</span><input name="amount" required type="number" min="0.01" step="0.01" placeholder="420" /></label>
+          <label class="field"><span>付款人</span><input name="payer" required maxlength="12" placeholder="例如：王强" /></label>
+          <label class="field"><span>分摊方式</span><select name="splitType" required><option value="均摊">参与人均摊</option><option value="按比例">按约定比例</option><option value="按实际用量">按实际用量</option><option value="自定义">自定义规则</option></select></label>
+          <label class="field"><span>参与人数</span><input name="participants" required type="number" min="1" max="20" value="4" /></label>
+          <label class="field"><span>人均待付（可选）</span><input name="shareAmount" type="number" min="0" step="0.01" placeholder="留空则按人数均摊" /></label>
+          <label class="field full"><span>分摊说明（可选）</span><input name="splitNote" maxlength="30" placeholder="例如：主卧 40%，其余两人各 30%" /></label>
+        </div>
+        <p class="form-hint">均摊可留空人均待付；比例、用量或自定义规则可填写本人的待付金额和分摊说明。</p>
+        <div class="dialog-actions"><button class="secondary-btn" type="button" data-close-dialog>取消</button><button class="primary-btn" type="submit">保存费用</button></div>
+      </form>
+    </dialog>
+
+    <dialog class="dialog" id="schedule-dialog">
+      <form class="dialog-form" id="schedule-form">
+        <div class="dialog-header">
+          <div><p class="eyebrow">值日安排</p><h2>新增轮值任务</h2></div>
+          <button class="icon-btn" type="button" data-close-dialog aria-label="关闭">×</button>
+        </div>
+        <div class="form-grid">
+          <label class="field full"><span>任务名称</span><input name="title" required maxlength="24" placeholder="例如：客厅清洁" /></label>
+          <label class="field full"><span>轮值成员</span><input name="members" required maxlength="80" placeholder="用逗号分隔，例如：王强，李四，张三" /></label>
+          <label class="field"><span>开始日期</span><input name="startDate" required type="date" /></label>
+          <label class="field"><span>执行时间</span><input name="time" required type="time" value="20:00" /></label>
+          <label class="field full"><span>轮值周期</span><select name="frequency" required><option value="每周">每周一次</option><option value="每两周">每两周一次</option><option value="每月">每月一次</option></select></label>
+        </div>
+        <p class="form-hint">成员会按填写顺序轮换；点击“下一轮排班”即可演示轮值变化。</p>
+        <div class="dialog-actions"><button class="secondary-btn" type="button" data-close-dialog>取消</button><button class="primary-btn" type="submit">保存排班</button></div>
+      </form>
+    </dialog>
+
+    <dialog class="dialog" id="item-dialog">
+      <form class="dialog-form" id="item-form">
+        <div class="dialog-header">
+          <div><p class="eyebrow">共享库存</p><h2>登记公共物品</h2></div>
+          <button class="icon-btn" type="button" data-close-dialog aria-label="关闭">×</button>
+        </div>
+        <div class="form-grid">
+          <label class="field full"><span>物品名称</span><input name="title" required maxlength="20" placeholder="例如：抽纸" /></label>
+          <label class="field"><span>当前数量</span><input name="now" required type="number" min="0" step="1" value="1" /></label>
+          <label class="field"><span>提醒数量</span><input name="min" required type="number" min="1" step="1" value="2" /></label>
+          <label class="field full"><span>计量单位</span><input name="unit" required maxlength="8" placeholder="例如：包、瓶、盒" /></label>
+        </div>
+        <div class="dialog-actions"><button class="secondary-btn" type="button" data-close-dialog>取消</button><button class="primary-btn" type="submit">保存物品</button></div>
+      </form>
+    </dialog>
+
+    <dialog class="dialog" id="rule-dialog">
+      <form class="dialog-form" id="rule-form">
+        <div class="dialog-header">
+          <div><p class="eyebrow">共同约定</p><h2>新增室友公约</h2></div>
+          <button class="icon-btn" type="button" data-close-dialog aria-label="关闭">×</button>
+        </div>
+        <div class="form-grid">
+          <label class="field full"><span>公约内容</span><textarea name="text" required maxlength="100" rows="4" placeholder="写下大家共同认可的生活规则"></textarea></label>
+          <label class="field full"><span>公约级别</span><select name="level"><option value="must">必须遵守</option><option value="good">建议遵守</option></select></label>
+        </div>
+        <div class="dialog-actions"><button class="secondary-btn" type="button" data-close-dialog>取消</button><button class="primary-btn" type="submit">保存公约</button></div>
+      </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="script.js"></script>
   </body>
